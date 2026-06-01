@@ -62,6 +62,9 @@ jobs:
             set -euo pipefail
             cd "${{ secrets.DEPLOY_DIR }}"
             git pull --ff-only
+            # down trước khi up → idempotent, tránh conflict tên container/network
+            # nếu state trước đó lệch (vd container tạo ngoài compose).
+            docker compose down --remove-orphans || true
             docker compose up -d --build
             docker image prune -f
             # Post-deploy gate: thử /v1/health vài lần, fail job nếu không khỏe.
