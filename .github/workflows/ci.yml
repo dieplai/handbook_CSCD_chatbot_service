@@ -38,7 +38,21 @@ jobs:
       group: deploy-production
       cancel-in-progress: false
     steps:
+      # Secrets không dùng được trong if: job-level → check qua env, bỏ qua sạch
+      # khi chưa cấu hình VPS (tránh main đỏ vĩnh viễn trước khi có server).
+      - name: Check deploy config
+        id: check
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+        run: |
+          if [ -n "$VPS_HOST" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::VPS secrets chưa cấu hình — bỏ qua deploy."
+          fi
       - name: Deploy over SSH
+        if: steps.check.outputs.ready == 'true'
         uses: appleboy/ssh-action@7eaf76671a0d7eec5d98ee897acda4f968735a17 # v1.2.0
         with:
           host: ${{ secrets.VPS_HOST }}
