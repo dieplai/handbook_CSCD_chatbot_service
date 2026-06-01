@@ -25,6 +25,10 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     openai_failover_model: str = "gpt-4o"
 
+    # Provider strategy: "ninerouter" (primary 9Router + optional OpenAI failover) or
+    # "openai" (OpenAI-direct ONLY — no 9Router, no failover).
+    provider: str = "ninerouter"
+
     # Generation params (validated demo defaults).
     default_model: str = "sonnet-4.5"
     temperature: float = 0.2

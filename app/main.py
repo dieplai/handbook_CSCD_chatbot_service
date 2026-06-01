@@ -33,6 +33,13 @@ def build_corpus(data_dir) -> dict:
 
 
 def build_provider(settings: Settings, client: httpx.AsyncClient):
+    # OpenAI-only strategy: OpenAI-direct is the sole provider, no 9Router, no failover.
+    if settings.provider == "openai":
+        if not settings.openai_api_key:
+            raise RuntimeError("PROVIDER=openai requires OPENAI_API_KEY")
+        return OpenAIDirect(settings.openai_api_key, settings.openai_failover_model, client,
+                            read_timeout_s=settings.read_timeout_s)
+
     model_map = {pid: r.ninerouter for pid, r in MODEL_ROUTES.items()}
     primary = NineRouter(settings.ninerouter_url, settings.ninerouter_key, client,
                          model_map=model_map,

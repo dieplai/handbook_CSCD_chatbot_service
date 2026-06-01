@@ -34,9 +34,11 @@ def make_settings(**over) -> Settings:
         service_api_key=TEST_KEY,
         ninerouter_url="http://example.invalid/v1",
         ninerouter_key="x",
+        openai_api_key="",  # default: no failover unless a test opts in
     )
     base.update(over)
-    return Settings(**base)
+    # _env_file=None → ignore a real .env so tests are deterministic everywhere.
+    return Settings(_env_file=None, **base)
 
 
 @pytest.fixture
