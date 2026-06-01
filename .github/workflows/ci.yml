@@ -65,9 +65,9 @@ jobs:
             docker compose up -d --build
             docker image prune -f
             # Post-deploy gate: thử /v1/health vài lần, fail job nếu không khỏe.
-            # Host port = 8001 (8000 đã bị service khác chiếm); container vẫn nội bộ 8000.
+            # Host port = 8010 (VPS đã chạy epr-* stack trên 8000/8001/8100/8101).
             for i in $(seq 1 10); do
-              if curl -fsS http://127.0.0.1:8001/v1/health; then exit 0; fi
+              if curl -fsS http://127.0.0.1:8010/v1/health; then exit 0; fi
               sleep 3
             done
             echo "health check failed after deploy" >&2

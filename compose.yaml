@@ -6,9 +6,9 @@ services:
     env_file: .env
     # Bind to loopback only — the user's nginx terminates TLS and proxies in.
     # NEVER expose this port directly to the internet (no TLS here).
-    # Port 8001 on the host because 8000 is already taken by another service.
+    # Host port 8010: the VPS already runs an epr-* stack on 8000/8001/8100/8101.
     ports:
-      - "127.0.0.1:8001:8000"
+      - "127.0.0.1:8010:8000"
     deploy:
       resources:
         limits:
