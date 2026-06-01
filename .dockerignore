@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+.git/
+.github/
+tests/
+*.md
+out_uvicorn.log
+.pytest_cache/
+.ruff_cache/

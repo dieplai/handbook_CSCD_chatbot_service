@@ -1,0 +1,20 @@
+services:
+  handbook-cscd:
+    build: .
+    image: handbook-cscd:latest
+    restart: unless-stopped
+    env_file: .env
+    # Bind to loopback only — the user's nginx terminates TLS and proxies in.
+    # NEVER expose this port directly to the internet (no TLS here).
+    ports:
+      - "127.0.0.1:8000:8000"
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
