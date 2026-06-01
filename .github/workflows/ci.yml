@@ -1,26 +1,59 @@
-name: CI
+name: CI/CD
 
 on:
   push:
     branches: [main]
   pull_request:
 
+# Hủy run cũ khi push liên tiếp lên cùng ref (tiết kiệm runner).
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: handbook_CSCD
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
         with:
           python-version: "3.12"
+          cache: pip
       - name: Install dev deps
         run: pip install -r requirements-dev.txt
       - name: Lint
-        run: ruff check app/
+        run: ruff check app/ tests/
       - name: Test
         run: pytest -q
       - name: Docker build
         run: docker build -t handbook-cscd:ci .
+
+  deploy:
+    # Chỉ deploy khi: test xanh + push vào main (KHÔNG deploy trên PR).
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    # Một deploy tại một thời điểm; KHÔNG hủy giữa chừng (tránh deploy dở dang).
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@7eaf76671a0d7eec5d98ee897acda4f968735a17 # v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            cd "${{ secrets.DEPLOY_DIR }}"
+            git pull --ff-only
+            docker compose up -d --build
+            docker image prune -f
+            # Post-deploy gate: thử /v1/health vài lần, fail job nếu không khỏe.
+            for i in $(seq 1 10); do
+              if curl -fsS http://127.0.0.1:8000/v1/health; then exit 0; fi
+              sleep 3
+            done
+            echo "health check failed after deploy" >&2
+            exit 1
