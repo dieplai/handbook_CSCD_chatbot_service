@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     provider: str = "ninerouter"
 
     # Generation params (validated demo defaults).
-    default_model: str = "sonnet-4.5"
+    default_model: str = "gpt-4.1-mini"
     temperature: float = 0.2
     max_tokens: int = 1500
 
