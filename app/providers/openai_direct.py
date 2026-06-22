@@ -54,8 +54,6 @@ class OpenAIDirect:
                 if resp.status_code >= 400:
                     body = (await resp.aread()).decode("utf-8", "replace")[:300]
                     raise ProviderError(f"openai {resp.status_code}: {body}",
-                                        retryable=resp.status_code in (408, 409, 429)
-                                        or resp.status_code >= 500,
                                         status=resp.status_code)
                 async for line in resp.aiter_lines():
                     line = line.strip()
@@ -76,7 +74,7 @@ class OpenAIDirect:
                     if tok:
                         yield StreamDelta(token=tok)
         except (httpx.TimeoutException, httpx.TransportError) as exc:
-            raise ProviderError(f"openai transport: {exc}", retryable=True) from exc
+            raise ProviderError(f"openai transport: {exc}") from exc
 
         cached = (usage.get("prompt_tokens_details") or {}).get("cached_tokens")
         yield StreamDelta(done=True, provider=self.name,
