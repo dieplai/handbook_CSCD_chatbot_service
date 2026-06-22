@@ -39,7 +39,6 @@ class HealthResponse(BaseModel):
 class ReadyResponse(BaseModel):
     ready: bool
     provider: str
-    failover_enabled: bool
     detail: str = ""
 
 

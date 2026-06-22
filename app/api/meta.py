@@ -20,16 +20,14 @@ def health(request: Request):
 
 @router.get("/ready", response_model=ReadyResponse)
 def ready(request: Request):
-    """Readiness: which provider is wired and whether failover is configured.
+    """Readiness: which provider is wired.
 
     Honest about scope — it does NOT make a live upstream call (that would cost a token
     round-trip on every poll); it reports configuration so a green /health can't hide a
     totally unconfigured provider.
     """
-    settings = get_settings(request)
     provider = get_provider(request)
-    return ReadyResponse(ready=True, provider=provider.name,
-                         failover_enabled=settings.failover_enabled)
+    return ReadyResponse(ready=True, provider=provider.name)
 
 
 @router.get("/models", response_model=ModelsResponse)

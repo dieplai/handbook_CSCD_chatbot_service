@@ -2,7 +2,7 @@
 
 Deliberately tiny — no logging framework, no metrics backend. One JSON line per request
 (NEVER the question/answer text — police domain, sensitive) and counters you can read at
-/v1/metrics to see if failover is firing and what TTFT looks like, without standing up
+/v1/metrics to see request volume and what TTFT looks like, without standing up
 Prometheus/Grafana for a single VPS.
 """
 from __future__ import annotations

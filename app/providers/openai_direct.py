@@ -1,11 +1,7 @@
-"""OpenAI-direct provider (failover).
+"""OpenAI-direct provider (sole provider).
 
-Runs only when 9Router is down, so its cost in normal operation is ~0 — which is why
-we use a quality model here, not the cheapest one (the design note: optimizing the
-failover model for price saves a near-zero bill while risking quality during an outage,
-exactly when reliability matters most). OpenAI auto-caches the static prefix (the 74k
-handbook) so failover TTFT is actually LOWER than the primary; `prompt_cache_key` pins
-routing for better hit rate.
+OpenAI auto-caches the static prefix (the ~41k handbook) so repeat-call TTFT drops sharply;
+`prompt_cache_key` pins routing for a better hit rate.
 """
 from __future__ import annotations
 
@@ -38,7 +34,7 @@ class OpenAIDirect:
 
     async def stream(self, system: str, history: list[Msg], query: str, model: str,
                      *, temperature: float, max_tokens: int) -> AsyncIterator[StreamDelta]:
-        # `model` is the public id; failover always uses the configured OpenAI model.
+        # `model` arg is the public id; the service always uses the configured OpenAI model.
         payload = {
             "model": self._model,
             "messages": self._build_messages(system, history, query),

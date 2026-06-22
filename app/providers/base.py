@@ -1,14 +1,13 @@
 """LLM provider contract.
 
-Every provider (9Router, OpenAI-direct, the failover composite) implements the same
-`stream` coroutine yielding `StreamDelta`s. Routes depend ONLY on this Protocol, so they
-never know which provider served a request — that's what makes failover transparent and
-fakes trivial to inject in tests.
+The provider implements the `stream` coroutine yielding `StreamDelta`s. Routes depend
+ONLY on this Protocol, so they never touch a concrete provider — which keeps fakes
+trivial to inject in tests.
 """
 from __future__ import annotations
 
 from collections.abc import AsyncIterator
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Protocol, runtime_checkable
 
 
@@ -31,19 +30,14 @@ class StreamDelta:
     provider: str | None = None
     prompt_tokens: int | None = None
     completion_tokens: int | None = None
-    cache_read_tokens: int | None = None  # OpenAI/Anthropic-direct cache hits; None on 9Router
+    cache_read_tokens: int | None = None  # OpenAI cache hits
 
 
 class ProviderError(Exception):
-    """Upstream failure. `retryable` decides whether failover should try the next provider.
+    """Upstream failure surfaced to the client as an SSE `error` event."""
 
-    429/5xx/timeout/connection -> retryable (transient). 400/401/403 -> not retryable
-    (the request or auth is wrong; trying another provider won't help).
-    """
-
-    def __init__(self, message: str, *, retryable: bool, status: int | None = None):
+    def __init__(self, message: str, *, status: int | None = None):
         super().__init__(message)
-        self.retryable = retryable
         self.status = status
 
 
@@ -65,8 +59,7 @@ class LLMProvider(Protocol):
 
 @dataclass
 class ModelRoute:
-    """Maps a public model id (e.g. 'sonnet-4.5') to each provider's real model id."""
+    """Maps a public model id to the real OpenAI model id."""
 
-    ninerouter: str
     openai: str = ""
-    label: str = field(default="")
+    label: str = ""

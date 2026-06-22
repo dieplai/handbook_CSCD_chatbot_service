@@ -16,18 +16,9 @@ class Settings(BaseSettings):
     # Service auth (the website's backend holds this; never exposed to browser JS).
     service_api_key: str = Field(min_length=8)
 
-    # Primary provider: 9Router.
-    ninerouter_url: str
-    ninerouter_key: str
-
-    # Failover provider: OpenAI direct. Optional — if unset, failover is disabled and
-    # a primary outage surfaces as a 503 instead of silently switching.
-    openai_api_key: str = ""
-    openai_failover_model: str = "gpt-4o"
-
-    # Provider strategy: "ninerouter" (primary 9Router + optional OpenAI failover) or
-    # "openai" (OpenAI-direct ONLY — no 9Router, no failover).
-    provider: str = "ninerouter"
+    # Provider: OpenAI direct (sole provider).
+    openai_api_key: str = Field(min_length=8)
+    openai_model: str = "gpt-4.1-mini"
 
     # Generation params (validated demo defaults).
     default_model: str = "gpt-4.1-mini"
@@ -38,13 +29,4 @@ class Settings(BaseSettings):
     max_history_msgs: int = 40
     max_message_chars: int = 8000
     rate_limit_per_min: int = 30
-    ttft_timeout_s: float = 15.0
     read_timeout_s: float = 120.0
-
-    # Circuit breaker.
-    breaker_threshold: int = 5
-    breaker_cooldown_s: float = 60.0
-
-    @property
-    def failover_enabled(self) -> bool:
-        return bool(self.openai_api_key)

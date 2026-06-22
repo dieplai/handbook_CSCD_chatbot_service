@@ -32,9 +32,7 @@ class ScriptedProvider:
 def make_settings(**over) -> Settings:
     base = dict(
         service_api_key=TEST_KEY,
-        ninerouter_url="http://example.invalid/v1",
-        ninerouter_key="x",
-        openai_api_key="",  # default: no failover unless a test opts in
+        openai_api_key="sk-test-key",
     )
     base.update(over)
     # _env_file=None → ignore a real .env so tests are deterministic everywhere.

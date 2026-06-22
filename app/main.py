@@ -15,11 +15,8 @@ from fastapi import FastAPI
 from app.api import chat, meta
 from app.config import Settings
 from app.core import corpus as corpus_mod
-from app.core.models import MODEL_ROUTES
 from app.core.observability import Metrics
 from app.core.security import RateLimiter
-from app.providers.failover import FailoverProvider
-from app.providers.ninerouter import NineRouter
 from app.providers.openai_direct import OpenAIDirect
 
 
@@ -32,26 +29,9 @@ def build_corpus(data_dir) -> dict:
     }
 
 
-def build_provider(settings: Settings, client: httpx.AsyncClient):
-    # OpenAI-only strategy: OpenAI-direct is the sole provider, no 9Router, no failover.
-    if settings.provider == "openai":
-        if not settings.openai_api_key:
-            raise RuntimeError("PROVIDER=openai requires OPENAI_API_KEY")
-        return OpenAIDirect(settings.openai_api_key, settings.openai_failover_model, client,
-                            read_timeout_s=settings.read_timeout_s)
-
-    model_map = {pid: r.ninerouter for pid, r in MODEL_ROUTES.items()}
-    primary = NineRouter(settings.ninerouter_url, settings.ninerouter_key, client,
-                         model_map=model_map,
-                         ttft_timeout_s=settings.ttft_timeout_s,
-                         read_timeout_s=settings.read_timeout_s)
-    if not settings.failover_enabled:
-        return primary
-    backup = OpenAIDirect(settings.openai_api_key, settings.openai_failover_model, client,
-                          read_timeout_s=settings.read_timeout_s)
-    return FailoverProvider(primary, backup,
-                            breaker_threshold=settings.breaker_threshold,
-                            breaker_cooldown_s=settings.breaker_cooldown_s)
+def build_provider(settings: Settings, client: httpx.AsyncClient) -> OpenAIDirect:
+    return OpenAIDirect(settings.openai_api_key, settings.openai_model, client,
+                        read_timeout_s=settings.read_timeout_s)
 
 
 def create_app(settings: Settings | None = None, data_dir=None) -> FastAPI:

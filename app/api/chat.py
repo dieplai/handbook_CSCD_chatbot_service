@@ -1,9 +1,9 @@
 """POST /v1/chat — SSE streaming answer over the full handbook.
 
 Flow: validate -> assemble system(handbook) + history + question -> stream from the
-provider (failover transparent) -> forward tokens -> emit a `done` event with metrics +
-parsed citations. The SSE contract reserves space for a future `guard` event without
-breaking clients (guard is intentionally out of scope this round).
+provider -> forward tokens -> emit a `done` event with metrics + parsed citations. The
+SSE contract reserves space for a future `guard` event without breaking clients (guard
+is intentionally out of scope this round).
 """
 from __future__ import annotations
 
